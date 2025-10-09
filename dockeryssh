@@ -1,0 +1,46 @@
+#!/bin/bash
+# -----------------------------------------------------------
+# Script para preparar servidor Ubuntu con Docker, Compose y SSH personalizado
+# Versión: 1.1
+# Autor: Artur
+# -----------------------------------------------------------
+
+echo "=== 1️⃣ Actualizando el servidor ==="
+sudo apt update -y && sudo apt upgrade -y
+sudo apt autoremove -y
+
+echo "=== 2️⃣ Instalando Docker y Docker Compose ==="
+sudo apt install -y curl docker.io
+
+echo "=== 🐳 Descargando Docker Compose desde GitHub ==="
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+echo "=== 🔧 Dando permisos de ejecución a docker-compose ==="
+sudo chmod +x /usr/local/bin/docker-compose
+
+echo "=== 👤 Agregando el usuario actual al grupo docker ==="
+sudo usermod -aG docker $USER
+
+echo "=== 🔍 Verificando instalación de Docker Compose ==="
+docker-compose --version
+
+echo "=== 3️⃣ Instalando y configurando OpenSSH ==="
+sudo apt install -y openssh-server
+
+echo "=== 🔧 Configurando SSH en puerto 222 y habilitando contraseñas ==="
+sudo sed -i 's/#Port 22/Port 222/' /etc/ssh/sshd_config
+sudo sed -i 's/#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+echo "=== 🚀 Reiniciando el servicio SSH ==="
+sudo systemctl enable ssh
+sudo systemctl restart ssh
+
+echo "=== ✅ Instalación completa ==="
+echo "Docker versión:"
+docker --version
+echo "Docker Compose versión:"
+docker-compose --version
+echo "SSH está configurado en el puerto 222"
+echo "Conéctate con: ssh tu_usuario@IP -p 222"
+echo "⚠️ IMPORTANTE: Reinicia el servidor o cierra sesión para aplicar el grupo docker"
