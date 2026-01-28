@@ -8,20 +8,7 @@ GITHUB_USER="arturinho16"
 TARGET_USER="arturcm"
 TARGET_HOME="/home/$TARGET_USER"
 
-echo "🔐 Configurando SSH para $TARGET_USER desde GitHub..."
-
-# Crear .ssh
-mkdir -p $TARGET_HOME/.ssh
-
-# Descargar llaves públicas
-curl -s https://github.com/$GITHUB_USER.keys >> $TARGET_HOME/.ssh/authorized_keys
-
-# Permisos correctos
-chown -R $TARGET_USER:$TARGET_USER $TARGET_HOME/.ssh
-chmod 700 $TARGET_HOME/.ssh
-chmod 600 $TARGET_HOME/.ssh/authorized_keys
-
-echo "✅ Llave SSH instalada para $TARGET_USER"
+echo "🚀 Iniciando bootstrap del servidor..."
 
 # ================================
 # UPDATE
@@ -30,24 +17,41 @@ echo "📦 Actualizando sistema..."
 apt update -y && apt upgrade -y
 
 # ================================
+# SSH SERVER
+# ================================
+echo "🔐 Instalando y habilitando OpenSSH Server..."
+apt install openssh-server -y
+systemctl enable ssh
+systemctl start ssh
+
+# ================================
+# SSH KEYS
+# ================================
+echo "🔑 Configurando SSH para $TARGET_USER desde GitHub..."
+
+mkdir -p $TARGET_HOME/.ssh
+curl -fsSL https://github.com/$GITHUB_USER.keys >> $TARGET_HOME/.ssh/authorized_keys
+
+chown -R $TARGET_USER:$TARGET_USER $TARGET_HOME/.ssh
+chmod 700 $TARGET_HOME/.ssh
+chmod 600 $TARGET_HOME/.ssh/authorized_keys
+
+echo "✅ Llave SSH instalada para $TARGET_USER"
+
+# ================================
 # DOCKER
 # ================================
 echo "🐳 Instalando Docker..."
 apt install docker.io -y
+systemctl enable docker
+systemctl start docker
 
-# Agregar usuario a docker
 usermod -aG docker $TARGET_USER
 
 # ================================
-# DOCKER COMPOSE
+# DONE
 # ================================
-echo "🔧 Instalando Docker Compose..."
-
-curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
-  -o /usr/local/bin/docker-compose
-
-chmod +x /usr/local/bin/docker-compose
-
-echo "🎉 Todo listo. Cierra sesión y vuelve a entrar."
-
+echo "🎉 Bootstrap completo."
+echo "👉 Cierra sesión y vuelve a entrar para usar Docker sin sudo."
+echo "👉 SSH ya está activo en el puerto 22."
 
